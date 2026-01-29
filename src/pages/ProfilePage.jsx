@@ -30,14 +30,14 @@ const ProfilePage = () => {
 
   const loadProfileData = async () => {
     if (!user) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
-      
+        .maybeSingle();
+
       if (data) {
         setProfileData(prev => ({ 
           ...prev, 
