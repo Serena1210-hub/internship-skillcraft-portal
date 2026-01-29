@@ -1,19 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../config/firebase";
-
-import {
-  collection,
-  getDocs,
-  updateDoc,
-  doc,
-  query,
-  orderBy,
-} from "firebase/firestore";
-
-
-
-
-
+import { supabase } from '../config/supabase';
 
 
 const statusColors = {

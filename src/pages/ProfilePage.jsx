@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Mail, User as UserIcon, Calendar, Book, Award, Settings, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { supabase } from '../config/supabase';
 
 const ProfilePage = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -27,18 +26,34 @@ const ProfilePage = () => {
 
   useEffect(() => {
     loadProfileData();
-  }, [user]);
+  }, [user, profile]);
 
   const loadProfileData = async () => {
     if (!user) return;
     
     try {
-      const docRef = doc(db, 'users', user.uid);
-      const docSnap = await getDoc(docRef);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
       
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setProfileData(prev => ({ ...prev, ...data }));
+      if (data) {
+        setProfileData(prev => ({ 
+          ...prev, 
+          fullName: data.full_name || '',
+          email: data.email || user.email,
+          phone: data.phone || '',
+          university: data.university || '',
+          major: data.major || '',
+          graduationYear: data.graduation_year || '',
+          gpa: data.gpa || '',
+          track: data.track || 'software',
+          bio: data.bio || '',
+          linkedIn: data.linkedin_url || '',
+          github: data.github_url || '',
+          portfolio: data.portfolio_url || ''
+        }));
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -52,11 +67,25 @@ const ProfilePage = () => {
     
     setSaving(true);
     try {
-      const docRef = doc(db, 'users', user.uid);
-      await updateDoc(docRef, {
-        ...profileData,
-        updatedAt: new Date().toISOString()
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: profileData.fullName,
+          phone: profileData.phone,
+          university: profileData.university,
+          major: profileData.major,
+          graduation_year: profileData.graduationYear ? parseInt(profileData.graduationYear) : null,
+          gpa: profileData.gpa ? parseFloat(profileData.gpa) : null,
+          track: profileData.track,
+          bio: profileData.bio,
+          linkedin_url: profileData.linkedIn,
+          github_url: profileData.github,
+          portfolio_url: profileData.portfolio,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
       setIsEditing(false);
       alert('Profile updated successfully!');
     } catch (error) {
@@ -154,7 +183,7 @@ const ProfilePage = () => {
                 <div className="text-2xl font-bold text-blue-600">
                   <Award className="w-8 h-8 mx-auto text-yellow-500" />
                 </div>
-                <p className="text-sm text-gray-600 mt-1">Intern</p>
+                <p className="text-sm text-gray-600 mt-1">{profile?.role === 'admin' ? 'Admin' : 'Intern'}</p>
               </div>
             </div>
           </div>
@@ -427,49 +456,6 @@ const ProfilePage = () => {
                   {profileData.portfolio || 'Not set'}
                 </p>
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Account Settings */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold flex items-center">
-              <Shield className="w-5 h-5 mr-2" />
-              Account Settings
-            </h3>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div>
-                <h4 className="font-medium">Email Notifications</h4>
-                <p className="text-sm text-gray-600">Receive updates about your application and program</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div>
-                <h4 className="font-medium">Two-Factor Authentication</h4>
-                <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
-              </div>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors">
-                Enable
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div>
-                <h4 className="font-medium text-red-900">Delete Account</h4>
-                <p className="text-sm text-red-700">Permanently delete your account and all data</p>
-              </div>
-              <button className="px-4 py-2 border-2 border-red-600 text-red-600 rounded-lg hover:bg-red-600 hover:text-white font-medium transition-colors">
-                Delete
-              </button>
             </div>
           </div>
         </div>

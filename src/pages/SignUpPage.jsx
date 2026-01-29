@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Check } from 'lucide-react';
 
-
 const SignUpPage = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
@@ -43,9 +42,10 @@ const SignUpPage = () => {
 
     try {
       await signUp(formData.email, formData.password, formData.fullName);
-      navigate('/dashboard');
+      alert('Registration successful! Please check your email to verify your account.');
+      navigate('/signin');
     } catch (err) {
-      setError('Failed to create account. Please try again.');
+      setError(err.message || 'Failed to create account. Please try again.');
       console.error(err);
     } finally {
       setLoading(false);

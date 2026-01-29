@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebase"; // your firebase config
+import { supabase } from '../config/supabase';
 import PublicHeader from "../components/PublicHeader";
 import Footer from "../components/Footer";
 

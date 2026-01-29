@@ -17,17 +17,10 @@ const SignInPage = () => {
     setLoading(true);
 
     try {
-      await signIn(email, password);
+      const { user } = await signIn(email, password);
 
-      // ✅ Redirect logic
-      // Option 1: Always go to dashboard
-      // navigate('/dashboard');
-
-      // Option 2: Go to home page
+      // Redirect to home after successful login
       navigate('/home');
-
-      // Option 3: Go back to previous page
-      // navigate(-1);
 
     } catch (err) {
       setError('Failed to sign in. Please check your credentials.');
